@@ -8,13 +8,11 @@ import br.com.adopet.api.repository.PetRepository;
 import br.com.adopet.api.repository.TutorRepository;
 import br.com.adopet.api.model.Adocao;
 import br.com.adopet.api.model.Pet;
-import br.com.adopet.api.model.StatusAdocao;
 import br.com.adopet.api.model.Tutor;
 import br.com.adopet.api.validacoes.ValidacaoSolicitacaoAdocao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
