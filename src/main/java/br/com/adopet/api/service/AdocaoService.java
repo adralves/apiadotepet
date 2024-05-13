@@ -11,6 +11,8 @@ import br.com.adopet.api.model.Adocao;
 import br.com.adopet.api.model.Pet;
 import br.com.adopet.api.model.StatusAdocao;
 import br.com.adopet.api.model.Tutor;
+import br.com.adopet.api.validacoes.ValidacaoPetDisponivel;
+import br.com.adopet.api.validacoes.ValidacaoSolicitacaoAdocao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,37 +30,19 @@ public class AdocaoService {
     private TutorRepository tutorRepository;
     @Autowired
     private PetRepository petRepository;
+    @Autowired
+    private List<ValidacaoSolicitacaoAdocao> validadoes;
 
     public void solicitar(SolicitacaoAdocaoDto dto){
 
         Pet pet = petRepository.getReferenceById(dto.idPet());
         Tutor tutor = tutorRepository.getReferenceById(dto.idTutor());
 
-        if (pet.getAdotado() == true) {
-            throw new ValidacaoException("Pet já foi adotado!");
-        } else {
-            List<Adocao> adocoes = adocaoRepository.findAll();
-
-            for (Adocao a : adocoes) {
-                if (a.getTutor() == tutor && a.getStatus() == StatusAdocao.AGUARDANDO_AVALIACAO) {
-                    throw new ValidacaoException("Tutor já possui outra adoção aguardando avaliação!");
-                }
-            }
-            for (Adocao a : adocoes) {
-                if (a.getPet() == pet && a.getStatus() == StatusAdocao.AGUARDANDO_AVALIACAO) {
-                    throw new ValidacaoException("Pet já está aguardando avaliação para ser adotado!");
-                }
-            }
-            for (Adocao a : adocoes) {
-                int contador = 0;
-                if (a.getTutor() == tutor && a.getStatus() == StatusAdocao.APROVADO) {
-                    contador = contador + 1;
-                }
-                if (contador == 5) {
-                    throw new ValidacaoException("Tutor chegou ao limite máximo de 5 adoções!");
-                }
-            }
-        }
+        /*
+         *Chama as validações(o spring fica responsavel por criar todas os objetos e fazer as validações necessarias dentro de cada classe)
+         *essa validação esta usando o padrão Chain of Responsibility
+         */
+        validadoes.forEach(v -> v.validar(dto));
 
         Adocao adocao = new Adocao();
         adocao.setData(LocalDateTime.now());
