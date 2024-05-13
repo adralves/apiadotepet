@@ -3,7 +3,6 @@ package br.com.adopet.api.service;
 import br.com.adopet.api.dto.AprovacaoAdocaoDto;
 import br.com.adopet.api.dto.ReprovacaoAdocaoDto;
 import br.com.adopet.api.dto.SolicitacaoAdocaoDto;
-import br.com.adopet.api.exception.ValidacaoException;
 import br.com.adopet.api.repository.AdocaoRepository;
 import br.com.adopet.api.repository.PetRepository;
 import br.com.adopet.api.repository.TutorRepository;
@@ -11,7 +10,6 @@ import br.com.adopet.api.model.Adocao;
 import br.com.adopet.api.model.Pet;
 import br.com.adopet.api.model.StatusAdocao;
 import br.com.adopet.api.model.Tutor;
-import br.com.adopet.api.validacoes.ValidacaoPetDisponivel;
 import br.com.adopet.api.validacoes.ValidacaoSolicitacaoAdocao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -44,12 +42,7 @@ public class AdocaoService {
          */
         validadoes.forEach(v -> v.validar(dto));
 
-        Adocao adocao = new Adocao();
-        adocao.setData(LocalDateTime.now());
-        adocao.setStatus(StatusAdocao.AGUARDANDO_AVALIACAO);
-        adocao.setPet(pet);
-        adocao.setTutor(tutor);
-        adocao.setMotivo(dto.motivo());
+        Adocao adocao = new Adocao(tutor,pet, dto.motivo());
 
         adocaoRepository.save(adocao);
 
@@ -60,7 +53,7 @@ public class AdocaoService {
 
     public void aprovar(AprovacaoAdocaoDto dto){
         Adocao adocao = adocaoRepository.getReferenceById(dto.idAdocao());
-        adocao.setStatus(StatusAdocao.APROVADO);
+        adocao.MarcarComoAprovado();
 
         String mensagem = "Parabéns " +adocao.getTutor().getNome() +"!\n\nSua adoção do pet " +adocao.getPet().getNome() +", solicitada em " +adocao.getData().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")) +", foi aprovada.\nFavor entrar em contato com o abrigo " +adocao.getPet().getAbrigo().getNome() +" para agendar a busca do seu pet.";
         emailService.enviarEmail(adocao.getTutor().getEmail(),"Adoção aprovada",mensagem);
@@ -69,8 +62,7 @@ public class AdocaoService {
 
     public void reprovar(ReprovacaoAdocaoDto dto){
         Adocao adocao = adocaoRepository.getReferenceById(dto.idAdocao());
-        adocao.setStatus(StatusAdocao.REPROVADO);
-        adocao.setJustificativaStatus(dto.justificativa());
+        adocao.marcarComoReprovado(dto.justificativa());
 
         String mensagem = "Olá " +adocao.getTutor().getNome() +"!\n\nInfelizmente sua adoção do pet " +adocao.getPet().getNome() +", solicitada em " +adocao.getData().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")) +", foi reprovada pelo abrigo " +adocao.getPet().getAbrigo().getNome() +" com a seguinte justificativa: " +adocao.getJustificativaStatus();
         emailService.enviarEmail(adocao.getTutor().getEmail(),"Adoção reprovada",mensagem);

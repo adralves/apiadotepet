@@ -21,14 +21,23 @@ public class ValidacaoPetComAdocaoEmAndamento implements ValidacaoSolicitacaoAdo
     @Autowired
     private PetRepository petRepository;
     public void validar(SolicitacaoAdocaoDto dto){
-        List<Adocao> adocoes = adocaoRepository.findAll();
-        Pet pet = petRepository.getReferenceById(dto.idPet());
+        /* O codigo abaixo foi refatorado, pensando em melhoria de performance, pois o JPA irá fazer uma consulta melhorada no banco de dados usando o Spring
+            List<Adocao> adocoes = adocaoRepository.findAll();
+            Pet pet = petRepository.getReferenceById(dto.idPet());
 
-        for (Adocao a : adocoes){
-            if (a.getPet() == pet && a.getStatus() == StatusAdocao.AGUARDANDO_AVALIACAO) {
-                throw new ValidacaoException("Pet já esta aguardando avaliação para ser adotado!");
+            for (Adocao a : adocoes){
+                if (a.getPet() == pet && a.getStatus() == StatusAdocao.AGUARDANDO_AVALIACAO) {
+                    throw new ValidacaoException("Pet já esta aguardando avaliação para ser adotado!");
+                }
             }
+         */
+
+        boolean petTemAdocaoEmAndamento = adocaoRepository.existsByPetIdAndStatus(dto.idPet(),StatusAdocao.AGUARDANDO_AVALIACAO);
+
+        if (petTemAdocaoEmAndamento) {
+            throw new ValidacaoException("Pet já esta aguardando avaliação para ser adotado!");
         }
+
     }
 
 }
